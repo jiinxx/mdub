@@ -2,11 +2,10 @@
 
 #dub wait localhost 9300 20
 
-
 function check_availability(){
 	count=0
 	step=1
-	
+
 	while [[ -z $(printf "GET / HTTP/1.0\r\n\r\n" | nc $1 $2 | grep -e '200 OK') ]]; do
     		sleep $step;
     		count=$(expr $count + $step)
@@ -27,20 +26,24 @@ fi
 CMD=$1
 
 case "$CMD" in
-	wait) 	echo "waiting"
+	## Check availability
+	wait)
 		if [ $# != 4 ]
 		then
 			echo "Usage : $0 wait <HOST> <PORT> <TIMEOUT>"
 			exit; 
+		else
+			if check_availability $2 $3 $4; then
+    				echo "Not able to connect to $2:$3 (waited for $4 sec)"
+    				exit 1
+			fi
 		fi
-		HOST=$2
-		PORT=$3
-		TIMEOUT=$4
 		;;
+
+	#Catch all
 	*) echo "dat aint no cmd.."
 	   exit;;
 esac
-echo "$HOST, $PORT, $TIMEOUT"
 
 #shift
 #while getopts ":a:p:drh" opt; do
@@ -48,23 +51,3 @@ echo "$HOST, $PORT, $TIMEOUT"
 #    a) echo $OPTARG;;
 #  esac
 #done
-
-
-## Check availability
-#start_timeout_exceeded=false
-#count=0
-#step=10
-
-#while [[ -z $(printf "GET / HTTP/1.0\r\n\r\n" | nc localhost 8083 | grep -e '200 OK') ]]; do
-#    sleep $step;
-#    count=$(expr $count + $step)
-#    if [ $count -gt $START_TIMEOUT ]; then
-#        start_timeout_exceeded=true
-#        break
-#    fi
-#done
-
-if check_availability $HOST $PORT $TIMEOUT; then
-    echo "Not able to auto-create topic (waited for $TIMEOUT sec)"
-    exit 1
-fi
